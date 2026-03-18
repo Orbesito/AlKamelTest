@@ -7,8 +7,8 @@
 #include <QVBoxLayout>
 #include <QWidget>
 
-#include "network/AlkamelClient.h"
 #include "network/AppConfig.h"
+#include "network/AlkamelSession.h"
 
 namespace app
 {
@@ -18,14 +18,14 @@ MainWindow::MainWindow(QWidget *parent)
 {
     buildUi();
 
-    m_client = new network::AlkamelClient(network::AppConfig::fromAssignmentDefaults(), this);
+    m_session = new network::AlkamelSession(network::AppConfig::fromAssignmentDefaults(), this);
     connectSignals();
 }
 
 void MainWindow::start()
 {
-    appendLog(QStringLiteral("Phase 1 bootstrap: attempting SSL connection."));
-    m_client->connectToServer();
+    appendLog(QStringLiteral("Phase 2 bootstrap: starting protocol session."));
+    m_session->start();
 }
 
 void MainWindow::appendLog(const QString &message)
@@ -58,26 +58,26 @@ void MainWindow::buildUi()
 
     connect(reconnectButton, &QPushButton::clicked, this, [this]() {
         appendLog(QStringLiteral("Reconnect button clicked."));
-        m_client->disconnectFromServer();
-        m_client->connectToServer();
+        m_session->stop();
+        m_session->start();
     });
 }
 
 void MainWindow::connectSignals()
 {
-    connect(m_client, &network::AlkamelClient::connected, this, [this]() {
+    connect(m_session, &network::AlkamelSession::connected, this, [this]() {
         m_statusLabel->setText(QStringLiteral("Status: connected"));
     });
 
-    connect(m_client, &network::AlkamelClient::disconnected, this, [this]() {
+    connect(m_session, &network::AlkamelSession::loggedIn, this, [this]() {
+        m_statusLabel->setText(QStringLiteral("Status: logged in"));
+    });
+
+    connect(m_session, &network::AlkamelSession::disconnected, this, [this]() {
         m_statusLabel->setText(QStringLiteral("Status: disconnected"));
     });
 
-    connect(m_client, &network::AlkamelClient::rawLineReceived, this, [this](const QString &) {
-        // Raw lines are already logged by AlkamelClient in phase 1.
-    });
-
-    connect(m_client, &network::AlkamelClient::logMessage, this, [this](const QString &message) {
+    connect(m_session, &network::AlkamelSession::logMessage, this, [this](const QString &message) {
         appendLog(message);
     });
 }

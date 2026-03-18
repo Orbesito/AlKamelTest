@@ -14,6 +14,10 @@ AppConfig AppConfig::fromAssignmentDefaults()
     config.appVersion = QStringLiteral("0.1.0");
     config.protocolName = QStringLiteral("AKS V2 Protocol");
     config.protocolVersion = QStringLiteral("1.0.0");
+    config.joinChannels = {
+        QStringLiteral("timing.session.entry"),
+        QStringLiteral("timing.session.standings.overall.active")
+    };
     return config;
 }
 

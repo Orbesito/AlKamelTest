@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QString>
+#include <QStringList>
 #include <QtGlobal>
 
 namespace network
@@ -18,6 +19,7 @@ struct AppConfig
     QString appVersion;
     QString protocolName;
     QString protocolVersion;
+    QStringList joinChannels;
 
     static AppConfig fromAssignmentDefaults();
 };

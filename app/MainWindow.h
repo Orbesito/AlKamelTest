@@ -8,7 +8,7 @@ class QPlainTextEdit;
 
 namespace network
 {
-class AlkamelClient;
+class AlkamelSession;
 }
 
 namespace app
@@ -30,7 +30,7 @@ private:
 
     QLabel *m_statusLabel = nullptr;
     QPlainTextEdit *m_logView = nullptr;
-    network::AlkamelClient *m_client = nullptr;
+    network::AlkamelSession *m_session = nullptr;
 };
 
 } // namespace app
