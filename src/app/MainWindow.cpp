@@ -24,7 +24,9 @@ MainWindow::MainWindow(QWidget *parent)
 
 void MainWindow::start()
 {
-    appendLog(QStringLiteral("Phase 2 bootstrap: starting protocol session."));
+    m_stateStore.clear();
+    m_jsonUpdateCount = 0;
+    appendLog(QStringLiteral("Phase 3 bootstrap: starting protocol session with state store."));
     m_session->start();
 }
 
@@ -79,6 +81,18 @@ void MainWindow::connectSignals()
 
     connect(m_session, &network::AlkamelSession::logMessage, this, [this](const QString &message) {
         appendLog(message);
+    });
+
+    connect(m_session, &network::AlkamelSession::jsonPayloadReceived, this, [this](const QJsonObject &partialUpdate) {
+        m_stateStore.mergeUpdate(partialUpdate);
+        ++m_jsonUpdateCount;
+
+        // Keep the log readable: show state-merge snapshots periodically.
+        if (m_jsonUpdateCount == 1 || (m_jsonUpdateCount % 15) == 0) {
+            appendLog(QStringLiteral("State merged (%1 updates). Root keys: %2")
+                          .arg(m_jsonUpdateCount)
+                          .arg(m_stateStore.rootKeysSummary()));
+        }
     });
 }
 

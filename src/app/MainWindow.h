@@ -3,6 +3,8 @@
 #include <QMainWindow>
 #include <QString>
 
+#include "state/JsonStateStore.h"
+
 class QLabel;
 class QPlainTextEdit;
 
@@ -31,6 +33,8 @@ private:
     QLabel *m_statusLabel = nullptr;
     QPlainTextEdit *m_logView = nullptr;
     network::AlkamelSession *m_session = nullptr;
+    state::JsonStateStore m_stateStore;
+    int m_jsonUpdateCount = 0;
 };
 
 } // namespace app

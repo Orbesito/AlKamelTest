@@ -29,6 +29,7 @@ signals:
     void connected();
     void disconnected();
     void loggedIn();
+    void jsonPayloadReceived(const QJsonObject &partialUpdate);
     void logMessage(const QString &message);
 
 private slots:

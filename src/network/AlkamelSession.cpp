@@ -220,6 +220,11 @@ void AlkamelSession::dispatchIncoming(const ProtocolMessage &message)
     case ProtocolCommand::Json:
         emitLog(QStringLiteral("JSON message received on channel '%1'.")
                     .arg(inferJsonRootChannel(message)));
+        if (message.hasJsonData() && message.jsonData->isObject()) {
+            emit jsonPayloadReceived(message.jsonData->object());
+        } else {
+            emitLog(QStringLiteral("Ignoring JSON command without object payload."));
+        }
         return;
     case ProtocolCommand::Reply:
     case ProtocolCommand::Cmd:
