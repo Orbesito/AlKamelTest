@@ -2,6 +2,7 @@
 
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QStringList>
 #include <utility>
 
 #include "network/ProtocolParser.h"
@@ -13,6 +14,28 @@ namespace
 QString commandLabel(network::ProtocolCommand command)
 {
     return network::protocolCommandToString(command);
+}
+
+QString inferJsonRootChannel(const network::ProtocolMessage &message)
+{
+    if (!message.channel.trimmed().isEmpty()) {
+        return message.channel.trimmed();
+    }
+
+    if (!message.hasJsonData() || !message.jsonData->isObject()) {
+        return QStringLiteral("<empty>");
+    }
+
+    // For JSON:n:: payloads, infer a readable channel hint from root keys.
+    const QStringList keys = message.jsonData->object().keys();
+    if (keys.isEmpty()) {
+        return QStringLiteral("<empty>");
+    }
+    if (keys.size() == 1) {
+        return keys.first();
+    }
+
+    return keys.join(QStringLiteral(","));
 }
 
 } // namespace
@@ -64,6 +87,7 @@ void AlkamelSession::onTransportConnected()
     clearSessionState();
     emit connected();
 
+    // Protocol session bootstrap: authenticate first, then subscribe.
     emitLog(QStringLiteral("Transport connected. Sending LOGIN."));
     sendLogin();
 }
@@ -77,9 +101,14 @@ void AlkamelSession::onTransportDisconnected()
 
 void AlkamelSession::onRawLineReceived(const QString &line)
 {
+    if (line.trimmed().isEmpty()) {
+        return;
+    }
+
     const ProtocolParseResult parsed = ProtocolParser::parseLine(line);
     if (!parsed.ok) {
-        emitLog(QStringLiteral("Protocol parse error: %1 | line=%2").arg(parsed.error, line));
+        const QString sanitizedLine = line.isEmpty() ? QStringLiteral("<empty>") : line;
+        emitLog(QStringLiteral("Protocol parse error: %1 | line=%2").arg(parsed.error, sanitizedLine));
         return;
     }
 
@@ -96,6 +125,7 @@ void AlkamelSession::onPingTimerTimeout()
         return;
     }
 
+    // Keepalive cadence is server-driven (pingRate from LOGIN reply).
     sendPing();
 }
 
@@ -165,6 +195,7 @@ void AlkamelSession::sendMessage(const ProtocolMessage &message)
     }
 
     if (!message.messageId.isEmpty()) {
+        // Track client requests so ACK/ERROR can be correlated in logs.
         m_pendingCommands.insert(message.messageId, message.command);
     }
 
@@ -187,7 +218,8 @@ void AlkamelSession::dispatchIncoming(const ProtocolMessage &message)
         handleError(message);
         return;
     case ProtocolCommand::Json:
-        emitLog(QStringLiteral("JSON message received on channel '%1'.").arg(message.channel));
+        emitLog(QStringLiteral("JSON message received on channel '%1'.")
+                    .arg(inferJsonRootChannel(message)));
         return;
     case ProtocolCommand::Reply:
     case ProtocolCommand::Cmd:
@@ -233,6 +265,7 @@ void AlkamelSession::handleLoginReply(const ProtocolMessage &message)
     m_pingTimer.start(m_pingRateSeconds * 1000);
     emitLog(QStringLiteral("PING timer started (%1s interval).").arg(m_pingRateSeconds));
 
+    // Channel list is configurable in AppConfig, so mapping assumptions stay isolated.
     for (const QString &channel : m_config.joinChannels) {
         sendJoin(channel);
     }

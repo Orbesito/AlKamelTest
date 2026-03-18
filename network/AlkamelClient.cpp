@@ -64,6 +64,7 @@ void AlkamelClient::sendRawLine(const QString &line)
     }
 
     QByteArray payload = line.toUtf8();
+    // Protocol V2 frames are line-delimited with CRLF.
     payload.append("\r\n");
     m_socket.write(payload);
 
@@ -91,14 +92,23 @@ void AlkamelClient::onReadyRead()
 {
     m_readBuffer.append(m_socket.readAll());
 
+    // Accept both CRLF and LF framing, and skip heartbeat/blank lines.
     while (true) {
-        const int terminatorIndex = m_readBuffer.indexOf("\r\n");
-        if (terminatorIndex < 0) {
+        const int newlineIndex = m_readBuffer.indexOf('\n');
+        if (newlineIndex < 0) {
             break;
         }
 
-        const QByteArray rawLine = m_readBuffer.left(terminatorIndex);
-        m_readBuffer.remove(0, terminatorIndex + 2);
+        QByteArray rawLine = m_readBuffer.left(newlineIndex);
+        m_readBuffer.remove(0, newlineIndex + 1);
+
+        if (!rawLine.isEmpty() && rawLine.back() == '\r') {
+            rawLine.chop(1);
+        }
+
+        if (rawLine.trimmed().isEmpty()) {
+            continue;
+        }
 
         const QString decoded = QString::fromUtf8(rawLine);
         emitLog(QStringLiteral("RX: %1").arg(decoded));

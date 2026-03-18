@@ -24,6 +24,7 @@ QString ProtocolSerializer::serialize(const ProtocolMessage &message)
 
     QString messageIdToken = message.messageId;
     if (message.isReply) {
+        // Reply frames carry the '+' marker on message-id.
         messageIdToken.append('+');
     }
 

@@ -10,6 +10,8 @@ ProtocolParseResult ProtocolParser::parseLine(const QString &line)
 {
     ProtocolParseResult result;
 
+    // Split only the first 3 separators: command:message-id:channel:data
+    // The data field may contain additional ':' characters (JSON payload).
     const int firstColon = line.indexOf(':');
     const int secondColon = firstColon >= 0 ? line.indexOf(':', firstColon + 1) : -1;
     const int thirdColon = secondColon >= 0 ? line.indexOf(':', secondColon + 1) : -1;
@@ -31,6 +33,7 @@ ProtocolParseResult ProtocolParser::parseLine(const QString &line)
     }
 
     if (messageIdToken.endsWith('+')) {
+        // Server replies append '+' to the original message id.
         result.message.isReply = true;
         messageIdToken.chop(1);
         messageIdToken = messageIdToken.trimmed();
