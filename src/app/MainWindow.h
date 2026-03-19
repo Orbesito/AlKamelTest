@@ -3,15 +3,20 @@
 #include <QMainWindow>
 #include <QString>
 
-#include "domain/RaceState.h"
 #include "state/JsonStateStore.h"
 
 class QLabel;
 class QPlainTextEdit;
+class QTableView;
 
 namespace network
 {
 class AlkamelSession;
+}
+
+namespace ui
+{
+class ClassificationTableModel;
 }
 
 namespace app
@@ -32,10 +37,11 @@ private:
     void connectSignals();
 
     QLabel *m_statusLabel = nullptr;
+    QTableView *m_tableView = nullptr;
+    ui::ClassificationTableModel *m_tableModel = nullptr;
     QPlainTextEdit *m_logView = nullptr;
     network::AlkamelSession *m_session = nullptr;
     state::JsonStateStore m_stateStore;
-    domain::ClassificationRows m_classificationRows;
     int m_jsonUpdateCount = 0;
 };
 

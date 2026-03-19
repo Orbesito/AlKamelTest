@@ -25,6 +25,7 @@ set(ALKAMEL_SOURCES
     src/network/ProtocolParser.cpp
     src/network/ProtocolSerializer.cpp
     src/state/JsonStateStore.cpp
+    src/ui/ClassificationTableModel.cpp
 )
 
 set(ALKAMEL_HEADERS
@@ -38,6 +39,7 @@ set(ALKAMEL_HEADERS
     src/network/ProtocolParser.h
     src/network/ProtocolSerializer.h
     src/state/JsonStateStore.h
+    src/ui/ClassificationTableModel.h
 )
 
 add_executable(alkamel_client

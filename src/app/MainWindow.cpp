@@ -1,9 +1,13 @@
 #include "app/MainWindow.h"
 
 #include <QDateTime>
+#include <QHeaderView>
+#include <QHBoxLayout>
 #include <QLabel>
 #include <QPlainTextEdit>
 #include <QPushButton>
+#include <QSplitter>
+#include <QTableView>
 #include <QVBoxLayout>
 #include <QWidget>
 
@@ -11,6 +15,7 @@
 #include "domain/RaceState.h"
 #include "network/AppConfig.h"
 #include "network/AlkamelSession.h"
+#include "ui/ClassificationTableModel.h"
 
 namespace app
 {
@@ -27,9 +32,9 @@ MainWindow::MainWindow(QWidget *parent)
 void MainWindow::start()
 {
     m_stateStore.clear();
-    m_classificationRows.clear();
+    m_tableModel->setRows({});
     m_jsonUpdateCount = 0;
-    appendLog(QStringLiteral("Phase 4 bootstrap: starting protocol session with state + domain builder."));
+    appendLog(QStringLiteral("Phase 5 bootstrap: starting protocol session with full UI model/view."));
     m_session->start();
 }
 
@@ -42,7 +47,7 @@ void MainWindow::appendLog(const QString &message)
 void MainWindow::buildUi()
 {
     setWindowTitle(QStringLiteral("Alkamel Classification Client"));
-    resize(900, 560);
+    resize(1280, 760);
 
     auto *central = new QWidget(this);
     auto *layout = new QVBoxLayout(central);
@@ -50,14 +55,42 @@ void MainWindow::buildUi()
     layout->setSpacing(8);
 
     m_statusLabel = new QLabel(QStringLiteral("Status: idle"), central);
-    m_logView = new QPlainTextEdit(central);
-    m_logView->setReadOnly(true);
-
     auto *reconnectButton = new QPushButton(QStringLiteral("Reconnect"), central);
 
-    layout->addWidget(m_statusLabel);
-    layout->addWidget(reconnectButton);
-    layout->addWidget(m_logView, 1);
+    auto *topBar = new QHBoxLayout();
+    topBar->addWidget(m_statusLabel);
+    topBar->addStretch(1);
+    topBar->addWidget(reconnectButton);
+
+    m_tableModel = new ui::ClassificationTableModel(this);
+    m_tableView = new QTableView(central);
+    m_tableView->setModel(m_tableModel);
+    m_tableView->setAlternatingRowColors(true);
+    m_tableView->setSortingEnabled(false);
+    m_tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
+    m_tableView->setSelectionMode(QAbstractItemView::SingleSelection);
+    m_tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    m_tableView->verticalHeader()->setVisible(false);
+    m_tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
+    m_tableView->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+    m_tableView->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
+    m_tableView->horizontalHeader()->setSectionResizeMode(8, QHeaderView::ResizeToContents);
+    m_tableView->horizontalHeader()->setStretchLastSection(true);
+
+    m_logView = new QPlainTextEdit(central);
+    m_logView->setReadOnly(true);
+    m_logView->setMaximumBlockCount(3000);
+    m_logView->setPlaceholderText(QStringLiteral("Runtime logs..."));
+
+    auto *splitter = new QSplitter(Qt::Vertical, central);
+    splitter->addWidget(m_tableView);
+    splitter->addWidget(m_logView);
+    splitter->setStretchFactor(0, 4);
+    splitter->setStretchFactor(1, 2);
+    splitter->setSizes({500, 220});
+
+    layout->addLayout(topBar);
+    layout->addWidget(splitter, 1);
 
     setCentralWidget(central);
 
@@ -89,7 +122,7 @@ void MainWindow::connectSignals()
     connect(m_session, &network::AlkamelSession::jsonPayloadReceived, this, [this](const QJsonObject &partialUpdate) {
         m_stateStore.mergeUpdate(partialUpdate);
         const domain::ClassificationBuilder::BuildResult buildResult = domain::ClassificationBuilder::build(m_stateStore.root());
-        m_classificationRows = buildResult.rows;
+        m_tableModel->setRows(buildResult.rows);
         ++m_jsonUpdateCount;
 
         // Keep the log readable: show state-merge snapshots periodically.
@@ -98,10 +131,10 @@ void MainWindow::connectSignals()
                           .arg(m_jsonUpdateCount)
                           .arg(m_stateStore.rootKeysSummary()));
 
-            if (!m_classificationRows.isEmpty()) {
-                const domain::ClassificationRow &leader = m_classificationRows.first();
+            if (!m_tableModel->rows().isEmpty()) {
+                const domain::ClassificationRow &leader = m_tableModel->rows().first();
                 appendLog(QStringLiteral("Classification rows=%1 | Leader P%2 #%3 %4 | status=%5")
-                              .arg(m_classificationRows.size())
+                              .arg(m_tableModel->rows().size())
                               .arg(leader.position)
                               .arg(leader.carNumber)
                               .arg(leader.driverName)
