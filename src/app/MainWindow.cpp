@@ -55,12 +55,15 @@ void MainWindow::buildUi()
     layout->setSpacing(8);
 
     m_statusLabel = new QLabel(QStringLiteral("Status: idle"), central);
-    auto *reconnectButton = new QPushButton(QStringLiteral("Reconnect"), central);
+    m_connectButton = new QPushButton(QStringLiteral("Connect"), central);
+    m_disconnectButton = new QPushButton(QStringLiteral("Disconnect"), central);
+    m_disconnectButton->setEnabled(false);
 
     auto *topBar = new QHBoxLayout();
     topBar->addWidget(m_statusLabel);
     topBar->addStretch(1);
-    topBar->addWidget(reconnectButton);
+    topBar->addWidget(m_connectButton);
+    topBar->addWidget(m_disconnectButton);
 
     m_tableModel = new ui::ClassificationTableModel(this);
     m_tableView = new QTableView(central);
@@ -94,10 +97,22 @@ void MainWindow::buildUi()
 
     setCentralWidget(central);
 
-    connect(reconnectButton, &QPushButton::clicked, this, [this]() {
-        appendLog(QStringLiteral("Reconnect button clicked."));
-        m_session->stop();
+    connect(m_connectButton, &QPushButton::clicked, this, [this]() {
+        if (m_session->isConnected()) {
+            appendLog(QStringLiteral("Connect requested, but session is already connected."));
+            return;
+        }
+
+        appendLog(QStringLiteral("Connect button clicked."));
+        m_stateStore.clear();
+        m_tableModel->setRows({});
+        m_jsonUpdateCount = 0;
         m_session->start();
+    });
+
+    connect(m_disconnectButton, &QPushButton::clicked, this, [this]() {
+        appendLog(QStringLiteral("Disconnect button clicked."));
+        m_session->stop();
     });
 }
 
@@ -105,14 +120,20 @@ void MainWindow::connectSignals()
 {
     connect(m_session, &network::AlkamelSession::connected, this, [this]() {
         m_statusLabel->setText(QStringLiteral("Status: connected"));
+        m_connectButton->setEnabled(false);
+        m_disconnectButton->setEnabled(true);
     });
 
     connect(m_session, &network::AlkamelSession::loggedIn, this, [this]() {
         m_statusLabel->setText(QStringLiteral("Status: logged in"));
+        m_connectButton->setEnabled(false);
+        m_disconnectButton->setEnabled(true);
     });
 
     connect(m_session, &network::AlkamelSession::disconnected, this, [this]() {
         m_statusLabel->setText(QStringLiteral("Status: disconnected"));
+        m_connectButton->setEnabled(true);
+        m_disconnectButton->setEnabled(false);
     });
 
     connect(m_session, &network::AlkamelSession::logMessage, this, [this](const QString &message) {

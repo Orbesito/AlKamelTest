@@ -124,7 +124,9 @@ QString formatGap(const QJsonObject &standingsRow, const QString &timeField, con
     // Server may provide time-based gaps or lap-based gaps depending on context.
     const int timeValue = jsonValueToInt(standingsRow.value(timeField), -1);
     if (timeValue >= 0) {
-        return QString::number(timeValue);
+        // Feed provides milliseconds; UI expects seconds with millisecond precision.
+        const double seconds = static_cast<double>(timeValue) / 1000.0;
+        return QString::number(seconds, 'f', 3);
     }
 
     const int lapsValue = jsonValueToInt(standingsRow.value(lapsField), -99999);

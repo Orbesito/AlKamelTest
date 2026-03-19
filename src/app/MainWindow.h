@@ -7,6 +7,7 @@
 
 class QLabel;
 class QPlainTextEdit;
+class QPushButton;
 class QTableView;
 
 namespace network
@@ -37,6 +38,8 @@ private:
     void connectSignals();
 
     QLabel *m_statusLabel = nullptr;
+    QPushButton *m_connectButton = nullptr;
+    QPushButton *m_disconnectButton = nullptr;
     QTableView *m_tableView = nullptr;
     ui::ClassificationTableModel *m_tableModel = nullptr;
     QPlainTextEdit *m_logView = nullptr;
