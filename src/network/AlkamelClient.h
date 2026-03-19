@@ -38,8 +38,11 @@ private slots:
 private:
     void emitLog(const QString &message);
 
+    // Connection settings are copied by value so the transport stays self-contained.
     AppConfig m_config;
+    // Value member: QSslSocket lives inside AlkamelClient, no manual delete required.
     QSslSocket m_socket;
+    // Persistent receive buffer used to reassemble line-delimited frames across reads.
     QByteArray m_readBuffer;
 };
 

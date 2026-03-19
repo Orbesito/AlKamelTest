@@ -37,6 +37,7 @@ private:
     void buildUi();
     void connectSignals();
 
+    // Qt child widgets/models: raw pointer is non-owning, lifetime managed by parent-child ownership.
     QLabel *m_statusLabel = nullptr;
     QPushButton *m_connectButton = nullptr;
     QPushButton *m_disconnectButton = nullptr;

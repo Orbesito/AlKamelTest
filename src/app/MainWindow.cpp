@@ -49,6 +49,7 @@ void MainWindow::buildUi()
     setWindowTitle(QStringLiteral("Alkamel Classification Client"));
     resize(1280, 760);
 
+    // Qt widget/layout objects are heap-allocated and attached to the QObject parent tree.
     auto *central = new QWidget(this);
     auto *layout = new QVBoxLayout(central);
     layout->setContentsMargins(12, 12, 12, 12);
@@ -77,6 +78,7 @@ void MainWindow::buildUi()
     m_tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
     m_tableView->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
     m_tableView->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
+    m_tableView->horizontalHeader()->setSectionResizeMode(7, QHeaderView::ResizeToContents);
     m_tableView->horizontalHeader()->setSectionResizeMode(8, QHeaderView::ResizeToContents);
     m_tableView->horizontalHeader()->setStretchLastSection(true);
 

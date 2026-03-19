@@ -20,6 +20,7 @@ public:
 private:
     static QJsonObject mergeObjects(const QJsonObject &base, const QJsonObject &patch);
 
+    // Full merged protocol state kept as a value member (no heap ownership complexity).
     QJsonObject m_root;
 };
 

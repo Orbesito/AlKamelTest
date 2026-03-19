@@ -85,8 +85,6 @@ QVariant ClassificationTableModel::data(const QModelIndex &index, int role) cons
         return valueOrDash(row.team);
     case Vehicle:
         return valueOrDash(row.vehicle);
-    case ClassName:
-        return valueOrDash(row.className);
     case Gap:
         return valueOrDash(row.gap);
     case Interval:
@@ -121,8 +119,6 @@ QVariant ClassificationTableModel::headerData(int section, Qt::Orientation orien
         return QStringLiteral("Team");
     case Vehicle:
         return QStringLiteral("Vehicle");
-    case ClassName:
-        return QStringLiteral("Class");
     case Gap:
         return QStringLiteral("Gap");
     case Interval:

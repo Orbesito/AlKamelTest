@@ -30,7 +30,6 @@ private:
         DriverName,
         Team,
         Vehicle,
-        ClassName,
         Gap,
         Interval,
         LapNumber,

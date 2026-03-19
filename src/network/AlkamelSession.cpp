@@ -47,6 +47,7 @@ AlkamelSession::AlkamelSession(AppConfig config, QObject *parent)
     : QObject(parent),
       m_config(std::move(config))
 {
+    // Owned by this session via Qt parent-child lifetime management.
     m_transport = new AlkamelClient(m_config, this);
 
     m_pingTimer.setSingleShot(false);

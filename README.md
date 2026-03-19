@@ -19,6 +19,12 @@ Domain extraction and normalization into classification rows.
 - `src/app/MainWindow.*`
 UI composition + wiring between networking, state, domain and model/view.
 
+## Memory Ownership (Heap vs Value)
+- `QObject`-derived UI/session/transport objects are created on the heap with `new` and attached to a Qt parent (`this` or a child widget). Qt parent-child ownership handles lifetime and destruction automatically.
+- Raw pointer members that reference those `QObject` instances are non-owning access pointers, not raw owning pointers.
+- Non-`QObject` data is mostly stored as value members (`AppConfig`, `QByteArray`, `QJsonObject`, counters, hashes, domain rows), which keeps ownership simple and deterministic.
+- `std::shared_ptr` is intentionally not used because there is no genuine shared-lifetime requirement in this project.
+
 ## Build Steps
 Example (Qt 6 + MinGW + Ninja on Windows):
 
