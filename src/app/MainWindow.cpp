@@ -7,6 +7,8 @@
 #include <QVBoxLayout>
 #include <QWidget>
 
+#include "domain/ClassificationBuilder.h"
+#include "domain/RaceState.h"
 #include "network/AppConfig.h"
 #include "network/AlkamelSession.h"
 
@@ -25,8 +27,9 @@ MainWindow::MainWindow(QWidget *parent)
 void MainWindow::start()
 {
     m_stateStore.clear();
+    m_classificationRows.clear();
     m_jsonUpdateCount = 0;
-    appendLog(QStringLiteral("Phase 3 bootstrap: starting protocol session with state store."));
+    appendLog(QStringLiteral("Phase 4 bootstrap: starting protocol session with state + domain builder."));
     m_session->start();
 }
 
@@ -85,6 +88,8 @@ void MainWindow::connectSignals()
 
     connect(m_session, &network::AlkamelSession::jsonPayloadReceived, this, [this](const QJsonObject &partialUpdate) {
         m_stateStore.mergeUpdate(partialUpdate);
+        const domain::ClassificationBuilder::BuildResult buildResult = domain::ClassificationBuilder::build(m_stateStore.root());
+        m_classificationRows = buildResult.rows;
         ++m_jsonUpdateCount;
 
         // Keep the log readable: show state-merge snapshots periodically.
@@ -92,6 +97,23 @@ void MainWindow::connectSignals()
             appendLog(QStringLiteral("State merged (%1 updates). Root keys: %2")
                           .arg(m_jsonUpdateCount)
                           .arg(m_stateStore.rootKeysSummary()));
+
+            if (!m_classificationRows.isEmpty()) {
+                const domain::ClassificationRow &leader = m_classificationRows.first();
+                appendLog(QStringLiteral("Classification rows=%1 | Leader P%2 #%3 %4 | status=%5")
+                              .arg(m_classificationRows.size())
+                              .arg(leader.position)
+                              .arg(leader.carNumber)
+                              .arg(leader.driverName)
+                              .arg(domain::raceStatusToString(leader.status)));
+            } else {
+                appendLog(QStringLiteral("Classification rows=0 (waiting for complete mapping data)."));
+            }
+
+            if (!buildResult.warnings.isEmpty()) {
+                appendLog(QStringLiteral("Classification info: %1")
+                              .arg(buildResult.warnings.join(QStringLiteral(" | "))));
+            }
         }
     });
 }

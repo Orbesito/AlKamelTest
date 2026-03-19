@@ -3,6 +3,7 @@
 #include <QMainWindow>
 #include <QString>
 
+#include "domain/RaceState.h"
 #include "state/JsonStateStore.h"
 
 class QLabel;
@@ -34,6 +35,7 @@ private:
     QPlainTextEdit *m_logView = nullptr;
     network::AlkamelSession *m_session = nullptr;
     state::JsonStateStore m_stateStore;
+    domain::ClassificationRows m_classificationRows;
     int m_jsonUpdateCount = 0;
 };
 

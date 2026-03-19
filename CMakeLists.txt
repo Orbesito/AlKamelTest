@@ -16,6 +16,8 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Widgets Network)
 set(ALKAMEL_SOURCES
     src/main.cpp
     src/app/MainWindow.cpp
+    src/domain/ClassificationBuilder.cpp
+    src/domain/RaceState.cpp
     src/network/AlkamelClient.cpp
     src/network/AppConfig.cpp
     src/network/AlkamelSession.cpp
@@ -27,6 +29,8 @@ set(ALKAMEL_SOURCES
 
 set(ALKAMEL_HEADERS
     src/app/MainWindow.h
+    src/domain/ClassificationBuilder.h
+    src/domain/RaceState.h
     src/network/AlkamelClient.h
     src/network/AppConfig.h
     src/network/AlkamelSession.h
@@ -82,3 +86,26 @@ else()
 endif()
 
 add_test(NAME json_state_store_tests COMMAND json_state_store_tests)
+
+add_executable(classification_builder_tests
+    tests/domain/ClassificationBuilderTests.cpp
+    src/domain/ClassificationBuilder.cpp
+    src/domain/RaceState.cpp
+    src/domain/ClassificationBuilder.h
+    src/domain/RaceState.h
+)
+
+target_include_directories(classification_builder_tests PRIVATE src)
+
+target_link_libraries(classification_builder_tests
+    PRIVATE
+        Qt${QT_VERSION_MAJOR}::Core
+)
+
+if(MSVC)
+    target_compile_options(classification_builder_tests PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(classification_builder_tests PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_test(NAME classification_builder_tests COMMAND classification_builder_tests)
